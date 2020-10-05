@@ -1,9 +1,40 @@
 args = commandArgs(trailingOnly = T)
 sample_dir = args[1]
-tune_sample_1 = as.numeric(args[2])
-tune_sample_2 = as.numeric(args[3])
+tune_sample_1 = args[2]
+tune_sample_2 = args[3]
 n.chr = args[4]
 resolution = as.numeric(args[5])
+out_name = args[6]
+seed = as.numeric(as.numeric(args[7]))
+
+n.args = length(args)
+
+tune1 = paste0(sample_dir, tune_sample_1, ".normalized.txt")
+tune2 = paste0(sample_dir, tune_sample_2, ".normalized.txt")
+
+check_dir = dir.exists(sample_dir)
+check_tune1 = file.exists(tune1)
+check_tune2 = file.exists(tune2)
+
+if (!check_dir) {
+	print("Sample directory doesn't exist!")
+	quit("no")
+
+}
+if (!check_tune1) {
+	print("First tuning sample does not exist!")
+	quit("no")
+}
+if (!check_tune2) {
+        print("Second tuning sample does not exist!")
+        quit("no")
+}
+if (n.args != 7) {
+	print("Six arguments required!")
+	print("Arguments entered are: ")
+	print(args)
+	quit("no")
+}
 
 file_list = list.files(sample_dir)
 sample_files = grep("normalized", file_list, value = TRUE)
@@ -27,9 +58,13 @@ if (!all(sort(samples) == sort(anchors))) {
 	print("Each sample must have corresponding anchor list!")
 	quit("no")
 }
+if (length(samples) < 2) {
+	print("At least two samples required for comparison!")
+	quit("no")
+}
 
 
-library(plyr)
+#library(plyr)
 library(data.table)
 
 
@@ -191,8 +226,20 @@ hicrep_tune <- function(sample1, sample2, anchors, resolution, seed) {
   return(h-1)
 }
 
+t1 = fread(tune1, header = T, data.table = F)
+t2 = fread(tune2, header = T, data.table = F)
+t1 = t1[t1$Chr == "chr1", 2:6]
+t2 = t2[t2$Chr == "chr1", 2:6]
 
-#hicrep_tune(get(samples[tune_sample_1]), get(samples[tune_sample_2]), anchors, resolution, 1)
+anchors = data.frame()
+for (i in 1:n.samples) {
+	a =  read.table(paste0(sample_dir, anchor_files[i]), header = T, stringsAsFactors = F)
+	anchors = rbind(anchors, a[a$chr == "chr1", ])
+}
+anchors = sort(unique(anchors)[, 2])
+
+
+#h = hicrep_tune(t1, t2, anchors, resolution, seed)
 
 
 h = 6  # Yin's data and hichip
@@ -208,7 +255,7 @@ for (chr in 1:as.numeric(n.chr)) {
 # Read in anchors
   anchors = data.frame()
   for (i in 1:n.samples) {
-        a =  read.table(anchor_files[i], header = T, stringsAsFactors = F)
+        a =  read.table(paste0(sample_dir, anchor_files[i]), header = T, stringsAsFactors = F)
         anchors = rbind(anchors, a[a$chr == paste0("chr", chr), ])
   } 
 
@@ -216,7 +263,7 @@ for (chr in 1:as.numeric(n.chr)) {
   anchors = sort(unique(anchors)[, 2])
 
   for (i in 1:n.samples) {
-        a = fread(sample_files[i], header = T, data.table = F)
+        a = fread(paste0(sample_dir, sample_files[i]), header = T, data.table = F)
         a = a[a$Chr == paste0("chr", chr), 2:6]
         assign(samples[i], a)
   }
@@ -239,7 +286,7 @@ for (chr in 1:as.numeric(n.chr)) {
   }
   print(paste0("Completed chromosome ", chr, " ", date()))
 }
-write.table(res, file = paste0("SCC.txt"), row.names = F, col.names = F, sep = '\t', quote = F)
+write.table(res, file = paste0(sample_dir, out_name, ".results.txt"), row.names = F, col.names = F, sep = '\t', quote = F)
 
 
 
