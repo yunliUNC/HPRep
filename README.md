@@ -1,15 +1,15 @@
-# HPRep pipeline user manual
+# HPRep user manual
 ## What is HPRep?
 HPRep is a methodological framework for determining reproducibility metrics between PLAC-Seq or HiChIP datasets. The pipeline involves three main stages:
 1. Preprocessing
 2. Regression and normalization
 3. Data matrix comparisons
  
-The preprocessing of the first stage is borrowed directly from the MAPS pipeline (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006982). This preprocessing pipeline, called feather, converts aligned, sorted, and merged pair-end reads to long and short .bed/.bedpe files. The short reads are used for determining ChIP efficiency and the long reads are used for reproducibility analysis. The second stage utilizes positive poisson regression to fit contact count predictive models to obtain expected counts for the observed data. Normalization involves reporting log<sub>2</sub>(1 + observed / expected). The last stage requires pairwise comparisons of all samples. Consequently, while the first two stages can be conducted in parallel, the last stage requires all results from stages 1 and 2.
+The preprocessing of the first stage is borrowed directly from the MAPS pipeline (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006982). This preprocessing pipeline, called feather, converts aligned, sorted, and merged pair-end reads to long and short .bed/.bedpe files. The second stage utilizes positive Poisson regression to fit contact count predictive models to obtain expected counts for the observed data. Normalization involves reporting log<sub>2</sub>(1 + observed / expected). The last stage requires pairwise comparisons of all samples. Consequently, while the first two stages can be conducted in parallel, the last stage requires all results from stages 1 and 2.
 
 The requirements and details for running the entire pipeline are provided below:
 
-HPRep pipeline runs on Linux and requires several readily available programs and packages. We list the versions used in testing and development with the caveat that (slightly) older and newer versions should work, but caveat utilitor.
+The HPRep pipeline runs on Linux and requires several readily available programs and packages. We list the versions used in testing and development with the caveat that (slightly) older and newer versions should work, but caveat utilitor.
 
 **python 3.6.6**
 * pandas 0.24.2
@@ -38,7 +38,7 @@ The bam file can be generated using bwa and samtools starting from the individua
 bwa mem -t threads index_file fastq_file1 > sample_R1.bwa
 bwa mem -t threads index_file fastq_file2 > sample_R2.bwa
 ```
-where threads in the number of threads available. Consult bwa documentation for building the appropriate index for the species / genomic build being analyzed. Sort both aligned files using
+where threads in the number of threads available. Consult bwa documentation for building or finding the appropriate index for the species / genomic build being analyzed. Sort both aligned files using
 ```
 samtools sort -o sample_R1.srtn.bam -n -@ threads sample_R1.bwa
 samtools sort -o sample_R2.srtn.bam -n -@ threads sample_R2.bwa
@@ -47,15 +47,16 @@ and finally merge them using
 ```
 samtools merge -n -f sample.srtn.merged.bam sample_R1.bwa sample_R2.bwa
 ```
-Note that while bwa does allow for alignment of paired ends the feather preprocessing pipeline has been optimized for PLAC-Seq and Hi-ChIP data, hence the above procedure. Additionally, while these steps could be incorporated directly into our pipeline, they are left for the user to allow for parallelization as they can be time consuming for large datasets.
+Prior users of the MAPS procedure will realize that these steps could be incorporated directly into our pipeline, however here they are left for the user to perform separately to allow for parallelization as they can be time consuming for large datasets.
 
 Genomic features files can be downloaded from http://enhancer.sdsc.edu/yunjiang/resources/genomic_features/.
 
 ## Running stages 1 and 2
-The first two stages of the pipeline can be run by copying the bash script run_pipeline_stages_1_2.sh and renaming it run_pipeline_stages_1_2_sample_name.sh, then executing it after editing the following 12 fields:
+The first two stages of the pipeline can be run by copying the bash script run_pipeline_stages_1_2.sh and renaming it run_pipeline_stages_1_2_sample_name.sh, then executing it after editing the following fields:
 
 * python_path - how execute python (python3, e.g.)
 * Rscript_path - how you execute R scripts (Rscript, e.g.)
+* feather - 1 to run full pipeline, 0 to intersect MAPS (see below)
 * input_bam_file - full path to input file
 * genomic_feat_file - full path to input genomic features file
 * macs2_filepath - full path to input MACS2 peaks file
@@ -67,6 +68,8 @@ The first two stages of the pipeline can be run by copying the bash script run_p
 * chr_count - chromosome count for organism (19 or 22)
 * threads - number of theads available for processing
 
+***For users who have previously run the MAPS pipeline***: You can avoid the feather pre-processing steps by setting feather to 0. You will then need to set the long_bedpe_dir and short_bed_dir fields to the directory or directories where these files are located.
+  
 Upon completion there will be two key outputs: 
 ```
 outdir/HPRep_output/dataset_name_date/dataset_name.resolution.anchors.txt
@@ -75,7 +78,7 @@ outdir/HPRep_output/dataset_name_date/dataset_name.resolution.normalized.txt
 When all samples have been run copy both of these files for each sample into a common directory in preparation for stage 3.
 
 ## Running stage 3
-This stage can be run by copying the bash script run_pipeline_stage_3.sh and renaming it run_pipeline_stage_3_study_name.sh, then executing it after editing the following 7 fileds:
+This stage can be run by copying the bash script run_pipeline_stage_3.sh and renaming it run_pipeline_stage_3_study_name.sh, then executing it after editing the following 9 fileds:
 
 * Rscript_path - same as previous
 * dir_name - the directory containing all .normalized.txt and .anchors.txt files
@@ -83,8 +86,9 @@ This stage can be run by copying the bash script run_pipeline_stage_3.sh and ren
 * tune_sample_2 - the sample name of other tuning sample, excluding .normalized.txt (see below)
 * chr_count - same as previous
 * bin_size - same as previous
+* binning_range - same as previous
 * output_name - name of the study, used for final output naming
-* seed - sets the tuning seed for reproducibility
+* seed - tuning seed for reproducibility
 
 The first step of the process tunes the smoothing parameter. The user specifies which samples to use for tuning. It is recommended to use samples that are NOT biological replicates. Note: the sample name should NOT include .normalized.txt.
 
