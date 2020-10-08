@@ -1,11 +1,14 @@
+library(data.table)
+
 args = commandArgs(trailingOnly = T)
 sample_dir = args[1]
 tune_sample_1 = args[2]
 tune_sample_2 = args[3]
 n.chr = args[4]
 resolution = as.numeric(args[5])
-out_name = args[6]
-seed = as.numeric(as.numeric(args[7]))
+binning_range = as.numeric(args[6])
+out_name = args[7]
+seed = as.numeric(as.numeric(args[8]))
 
 n.args = length(args)
 
@@ -16,25 +19,39 @@ check_dir = dir.exists(sample_dir)
 check_tune1 = file.exists(tune1)
 check_tune2 = file.exists(tune2)
 
+possible_resolutions = c(5000, 10000, 20000, 25000, 40000, 50000, 80000, 100000)
+if (n.args != 8) {
+        cat("Eight arguments required!\n")
+        cat("Arguments entered are: ")
+        cat(args)
+	cat("\n")
+        quit("no")
+}
 if (!check_dir) {
-	print("Sample directory doesn't exist!")
+	cat("Sample directory doesn't exist!\n")
 	quit("no")
 
 }
 if (!check_tune1) {
-	print("First tuning sample does not exist!")
+	cat("First tuning sample does not exist!\n")
 	quit("no")
 }
 if (!check_tune2) {
-        print("Second tuning sample does not exist!")
+        cat("Second tuning sample does not exist!\n")
         quit("no")
 }
-if (n.args != 7) {
-	print("Six arguments required!")
-	print("Arguments entered are: ")
-	print(args)
+if (!(resolution %in% possible_resolutions)) {
+	cat("bin_size must be one of: ")
+	cat(possible_resolutions)
+	cat("\n")
 	quit("no")
 }
+if (binning_range %% resolution) {
+	cat("binning_range must be evenly divisible by bin_size\n")
+	quit("no")
+}
+
+
 
 file_list = list.files(sample_dir)
 sample_files = grep("normalized", file_list, value = TRUE)
@@ -55,20 +72,16 @@ for (i in 1:n.samples) {
 }
 
 if (!all(sort(samples) == sort(anchors))) {
-	print("Each sample must have corresponding anchor list!")
+	cat("Each sample must have corresponding anchor list!\n")
 	quit("no")
 }
 if (length(samples) < 2) {
-	print("At least two samples required for comparison!")
+	cat("At least two samples required for comparison!\n")
 	quit("no")
 }
 
 
-#library(plyr)
-library(data.table)
-
-
-n.bins = 1e6/resolution * 2
+n.bins = binning_range / resolution * 2
 
 
 # Perform HPRep procedure
@@ -113,13 +126,7 @@ matrix_smooth = function(sample, h) {
   return(sample_smooth)
 }
 
-hicrep <- function(sample1, sample2, resolution) {
-  n_bins <- 1e6/resolution * 2
-  #anchors <- data.table::fread(anchor_file, data.table = F)
-  #anchors <- sort(anchors[anchors$chr == paste0("chr", chr), 2])
-
-  #cmat1 <- generate_contact_matrix(sample1, anchors, resolution, n_bins)
-  #cmat2 <- generate_contact_matrix(sample2, anchors, resolution, n_bins)
+hicrep <- function(sample1, sample2, n_bins) {
 
   cmat_smooth1 <- sample1
   cmat_smooth2 <- sample2
@@ -164,11 +171,8 @@ matrix_flatten <- function(sample, resolution, n_bins) {
 }
 
 
-hicrep_tune <- function(sample1, sample2, anchors, resolution, seed) {
+hicrep_tune <- function(sample1, sample2, anchors, resolution, n_bins, seed) {
   set.seed(seed)
-  n_bins <- 1e6/resolution * 2
-  #anchors <- data.table::fread(anchor_file, data.table = F)
-  #anchors <- sort(anchors[anchors$chr == paste0("chr", chr), 2])
 
   cmat1 <- generate_contact_matrix(sample1, anchors, resolution, n_bins)
   cmat2 <- generate_contact_matrix(sample2, anchors, resolution, n_bins)
@@ -215,14 +219,14 @@ hicrep_tune <- function(sample1, sample2, anchors, resolution, seed) {
       res_temp[j] = rho_s
     }
     res[h+1] = mean(res_temp)
-    print(paste0("Completed training for h = ", h))
+    cat(paste0("Completed training for h = ", h, "\n"))
     if (h > 0) {
       if (res[h+1] / res[h] < 1.01) {
         break
       }
     }
   }
-  print(paste0("Optimized h is ", h-1))
+  cat(paste0("Optimized h is ", h-1, "\n"))
   return(h-1)
 }
 
@@ -239,15 +243,12 @@ for (i in 1:n.samples) {
 anchors = sort(unique(anchors)[, 2])
 
 
-#h = hicrep_tune(t1, t2, anchors, resolution, seed)
+h = hicrep_tune(t1, t2, anchors, resolution, n.bins, seed)
 
 
-h = 6  # Yin's data and hichip
-#h = 7  # mouse
 runs = combn(n.samples, 2)
 n.runs = dim(runs)[2]
 res = matrix(NA, nrow = n.runs, ncol = 2 + as.numeric(n.chr))
-#s1_name = s2_name = SCC = rep(NA, n.runs)
 
 
 for (chr in 1:as.numeric(n.chr)) {
@@ -273,18 +274,16 @@ for (chr in 1:as.numeric(n.chr)) {
         res[i, 2] = samples[runs[2, i]]
   }
 
-  n.bins = 1e6/resolution * 2
 
   for (i in 1:n.samples) {
 	assign(paste0("contact", i), generate_contact_matrix(get(samples[i]), anchors, resolution, n.bins))
 	assign(paste0("smoothed", i), matrix_smooth(get(paste0("contact", i)), h))
-	print(date())
   }
 
   for (i in 1:n.runs) {
-	res[i, 2 + chr] = hicrep(get(paste0("smoothed", runs[1, i])), get(paste0("smoothed", runs[2, i])), resolution)
+	res[i, 2 + chr] = hicrep(get(paste0("smoothed", runs[1, i])), get(paste0("smoothed", runs[2, i])), n.bins)
   }
-  print(paste0("Completed chromosome ", chr, " ", date()))
+  cat(paste0(date(), " Completed chromosome ", chr, "\n"))
 }
 write.table(res, file = paste0(sample_dir, out_name, ".results.txt"), row.names = F, col.names = F, sep = '\t', quote = F)
 
