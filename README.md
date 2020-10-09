@@ -60,7 +60,7 @@ The first two stages of the pipeline can be run by copying the bash script run_p
 * input_bam_file - full path to input file
 * genomic_feat_file - full path to input genomic features file
 * macs2_filepath - full path to input MACS2 peaks file
-* dataset_name - name of sample
+* sample_name - name of sample
 * outdir - name of output directory (recommend using sample name)
 * bin_size - bin resolution (typically 5000 or 10000)
 * binning_range - maximum bin distance considered (default is 1000000)
