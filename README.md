@@ -31,7 +31,7 @@ The HPRep pipeline runs on Linux and requires several readily available programs
 ## Inputs
 1. Bam file: can be obtained from fastq files by applying <em>bwa</em> align, sort, and merge (detailed below)
 2. Genomic features file: can be downloaded from [Genomic features](http://enhancer.sdsc.edu/yunjiang/resources/genomic_features/)
-3. 1-D ChIP peaks: can be obtained by running MACS2 on corresponding ChIP-seq data, or on short-range reads
+3. 1-D ChIP peaks: can be obtained by running <em>MACS2</em> on corresponding ChIP-seq data, or on short-range reads
 
 The bam file can be generated using <em>bwa</em> and <em>samtools</em> starting from the individual paired end fastq files using
 ```
