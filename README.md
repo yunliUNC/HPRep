@@ -5,7 +5,7 @@ HPRep is a methodological framework to quantify reproducibility between PLAC-Seq
 2. Regression and normalization
 3. Data matrix comparisons
  
-The preprocessing of the first stage is borrowed directly from the MAPS pipeline (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006982). This preprocessing pipeline, called <em>feather</em>, converts aligned, sorted, and merged pair-end reads to long and short .bed/.bedpe files. The second stage utilizes positive Poisson regression to fit contact count predictive models to obtain expected counts for the observed data. Normalization involves reporting log<sub>2</sub>(1 + observed / expected). The last stage requires pairwise comparisons of all samples. Consequently, while the first two stages can be conducted in parallel, the last stage requires all results from stages 1 and 2.
+The preprocessing of the first stage is borrowed directly from the [MAPS pipeline] (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006982). This preprocessing pipeline, called <em>feather</em>, converts aligned, sorted, and merged pair-end reads to long and short .bed/.bedpe files. The second stage utilizes positive Poisson regression to fit contact count predictive models to obtain expected counts for the observed data. Normalization involves reporting log<sub>2</sub>(1 + observed / expected). The last stage requires pairwise comparisons of all samples. Consequently, while the first two stages can be conducted in parallel, the last stage requires all results from stages 1 and 2.
 
 The requirements and details for running the entire pipeline are provided below:
 
