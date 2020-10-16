@@ -12,8 +12,8 @@ seed = as.numeric(as.numeric(args[8]))
 
 n.args = length(args)
 
-tune1 = paste0(sample_dir, tune_sample_1, ".normalized.txt")
-tune2 = paste0(sample_dir, tune_sample_2, ".normalized.txt")
+tune1 = paste0(sample_dir, tune_sample_1)
+tune2 = paste0(sample_dir, tune_sample_2)
 
 check_dir = dir.exists(sample_dir)
 check_tune1 = file.exists(tune1)
