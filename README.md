@@ -5,7 +5,7 @@ HPRep is a methodological framework to quantify reproducibility between PLAC-Seq
 2. Regression and normalization
 3. Data matrix comparisons
  
-The first stage, preprocessing stage, is borrowed directly from the [<em>MAPS</em> pipeline](https://github.com/ijuric/MAPS) (detailed in [MAPS paper](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006982)). This preprocessing pipeline, called <em>feather</em>, converts aligned, sorted, and merged paired-end reads to long-range and short-range .bed/.bedpe files. The second stage utilizes positive Poisson regression estimates expected counts from the observed data, and derives the normalized contact: log<sub>2</sub>(1 + observed / expected). The last stage calculates pairwise reproducibility or similarity statistic among all samples. In general, we recommend processing samples in parallel in the first two stages and processing all samples together in the last stage.
+The first stage, preprocessing stage, is borrowed directly from the [<em>MAPS</em> pipeline](https://github.com/HuMingLab/MAPS) (detailed in [MAPS paper](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006982)). This preprocessing pipeline, called <em>feather</em>, converts aligned, sorted, and merged paired-end reads to long-range and short-range .bed/.bedpe files. The second stage utilizes positive Poisson regression estimates expected counts from the observed data, and derives the normalized contact: log<sub>2</sub>(1 + observed / expected). The last stage calculates pairwise reproducibility or similarity statistic among all samples. In general, we recommend processing samples in parallel in the first two stages and processing all samples together in the last stage. For questions regarding HPRep please email Ming Hu (afhuming@gmail.com) or Yun Li (yun_li@med.unc.edu).
 
 The requirements and details for running the entire pipeline are provided below:
 
@@ -92,5 +92,11 @@ The first step of the process tunes the smoothing parameter. The user specifies 
 
 The final output will be an (<em>n</em> choose 2) x (<em>p</em> + 2) matrix, where <em>n</em> is the number of samples and <em>p</em> is the number of chromosomes. Each row represents a specific pair of samples, the first two columns will be sample names and the remaining columns will be the corresponding reproducibility metric for each chromosome. The final output will be dir_name/ouput_name.results.txt.
 
+## Example 
+We provide an example of running stage 3 in the example folder which can be executed by editing the appropriate fields in <em>run_pipeline_stage_3_example.sh</em> and executing the script using:
+```
+./run_pipeline_stage_3_example.sh
+```
+The supplied data originate from published H3K4me3 PLAC-seq datasets from mouse embryonic stem cells and mouse brain tissues, both consisting of two samples analyzed at 10 Kb resolution. Upon successful completion the results file should contain the reproducibilty metrics for all 6 pairwise sample comparisons for 19 chromosomes.
 
 
