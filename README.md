@@ -75,6 +75,11 @@ outdir/HPRep_output/dataset_name_date/dataset_name.resolution.normalized.txt
 ```
 When all samples have been run copy both of these files for each sample into a common directory in preparation for stage 3.
 
+In addition to the output described above, a file containing the AIC and BIC values for the fitted positive Poisson models is included for each dataset/sample:
+```
+outdir/HPRep_output/dataset_name_date/dataset_name.AIC_BIC.txt
+```
+
 ## Running stage 3
 This stage can be run by copying the bash script <em>run_pipeline_stage_3.sh</em> and renaming it <em>run_pipeline_stage_3_study_name.sh</em>, then executing it after editing the following 9 fileds:
 
