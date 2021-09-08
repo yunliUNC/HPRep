@@ -88,7 +88,11 @@ pospoisson_regression <- function(mm) {
     fit <- vglm(count ~ logl + loggc + logm + logShortCount, family = pospoisson(), data = mm) # logdist removed for HP reproducibility 
     mm$expected = fitted(fit)
     mm$p_val = ppois(mm$count, mm$expected, lower.tail = FALSE, log.p = FALSE) / ppois(0, mm$expected, lower.tail = FALSE, log.p = FALSE)
-    return(mm)
+    AIC = round(AICvlm(fit, k = 5), 1)
+    BIC = round(BICvlm(fit), 1)
+    criteria = data.frame(AIC, BIC)
+    ret = list("mm" = mm, "criteria" = criteria) 
+    return(ret)
 }
 
 negbinom_regression <- function(mm) {
@@ -103,6 +107,9 @@ negbinom_regression <- function(mm) {
 
 mx_combined_and = data.frame()
 mx_combined_xor = data.frame()
+
+crit_combined_and = data.frame(NULL, NULL)
+crit_combined_xor = data.frame(NULL, NULL)
 
 for (r in runs) {
 ## in case you want to do resampling
@@ -121,8 +128,9 @@ for (r in runs) {
         #write.table(mm,outf_names[name_counter],row.names = TRUE,col.names = TRUE,quote=FALSE)
         #name_counter = name_counter + 1
         #print(outf_names[name_counter])
-        mx_combined_and = rbind(mx_combined_and, mm)
-        
+        mx_combined_and = rbind(mx_combined_and, mm$mm)
+        crit_combined_and = rbind(crit_combined_and, mm$criteria)
+
         mm = subset(mm_combined_xor, chr == i)
         if (REG_TYPE == 'pospoisson') {
             mm = pospoisson_regression(mm)
@@ -131,18 +139,25 @@ for (r in runs) {
         }
         #write.table(mm,outf_names[name_counter],row.names = TRUE,col.names = TRUE,quote=FALSE)
         #name_counter = name_counter + 1
-        mx_combined_xor = rbind(mx_combined_xor, mm)
+        mx_combined_xor = rbind(mx_combined_xor, mm$mm)
+        crit_combined_xor = rbind(crit_combined_xor, mm$criteria)
     }
 }
 
 mx_combined_all = rbind(mx_combined_and, mx_combined_xor)
 mx_combined_all$norm = log(1 + mx_combined_all$count / mx_combined_all$expected, 2)
 
+crit_combined_all = rbind(crit_combined_and, crit_combined_xor)
+crit_chrom = rep(chroms, each = 2)
+crit_set = rep(c("AND", "XOR"), length(chroms))
+crit_combined_all = cbind(crit_chrom, crit_set, crit_combined_all)
+
 res = mx_combined_all[, c("chr", "bin1_mid", "bin2_mid", "count", "expected", "norm")]
 colnames(res) = c("Chr", "Bin1", "Bin2", "Obs_count", "Exp_count", "Normalized_count") 
+colnames(crit_combined_all) = c("CHR", "SET", "AIC", "BIC")
 
 options(scipen = 999)
 write.table(res, file = paste0(OUTDIR, SUFFIX, '.normalized.txt'), row.names = F, col.names = T, quote = F)
-
+write.table(crit_combined_all, paste0(OUTDIR, SUFFIX, '.AIC_BIC.txt'), row.names = F, col.names = T, quote = F, sep = "\t")
 
 
