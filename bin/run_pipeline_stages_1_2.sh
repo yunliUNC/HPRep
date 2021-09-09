@@ -25,7 +25,7 @@ threads=1
 
 
 ##################################################################
-###DO NOT CHANGE
+###RECOMMENDED MODEL
 ##################################################################
 model="pospoisson" # recommended over "negbinom"
 
