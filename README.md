@@ -75,7 +75,7 @@ outdir/HPRep_output/dataset_name_date/dataset_name.resolution.normalized.txt
 ```
 When all samples have been run copy both of these files for each sample into a common directory in preparation for stage 3.
 
-In addition to the output described above, a file containing the AIC and BIC values for the fitted positive Poisson models is included for each dataset/sample. The default full model with four covariates (effective fragment length, GC content, mappability and ChIP enrichment level) in the zero-truncated Poisson regression shows good fit in our anaysis. If users decide to change the covariates included or trying alternative models (e.g., Negative Binomial), it would be useful to calculate and compare model-fitting metrics such as the AIC/BIC we provide, because if the model fits poorly in at least one of two datasets, the downstream reproducibility metric is not reliable.:
+In addition to the output described above, a file containing the AIC and BIC values for the fitted positive Poisson models is included for each dataset/sample. The default full model with four covariates (effective fragment length, GC content, mappability and ChIP enrichment level) in the zero-truncated Poisson regression shows good fit in our anaysis. If users decide to change the covariates included or trying alternative models (e.g., zero-truncated Negative Binomial), it would be useful to calculate and compare model-fitting metrics such as the AIC/BIC we provide, because if the model fits poorly in at least one of two datasets, the downstream reproducibility metric is not reliable.:
 ```
 outdir/HPRep_output/dataset_name_date/dataset_name.AIC_BIC.txt
 ```
