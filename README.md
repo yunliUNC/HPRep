@@ -93,7 +93,7 @@ This stage can be run by copying the bash script <em>run_pipeline_stage_3.sh</em
 * output_name - name of the study, used for final output naming
 * seed - tuning seed for reproducibility
 
-The first step of the process tunes the smoothing parameter. The user specifies which samples to use for tuning. It is recommended to use samples that are NOT biological replicates. Note: the sample name should NOT include .normalized.txt.
+The first step of the process tunes the smoothing parameter. The user specifies which samples to use for tuning. It is recommended to use samples that are NOT biological replicates.
 
 The final output will be an (<em>n</em> choose 2) x (<em>p</em> + 2) matrix, where <em>n</em> is the number of samples and <em>p</em> is the number of chromosomes. Each row represents a specific pair of samples, the first two columns will be sample names and the remaining columns will be the corresponding reproducibility metric for each chromosome. The final output will be dir_name/ouput_name.results.txt.
 
